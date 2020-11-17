@@ -1,0 +1,1 @@
+"0","autoplot(zVentas)+ylab(""Ventas"")+ggtitle(""Ventas Trimestrales Apple"")+xlab(""Trimestres"")"

@@ -1,0 +1,2 @@
+"0","zasales = as.zoo(Asales$Asales.Close)"
+"0","autoplot(zasales)+ylab(""Ventas"")+ggtitle(""Ventas Trimestrales Apple"")+xlab(""Trimestres"")"

@@ -1,0 +1,4 @@
+"0","zlVentas=log(zVentas)"
+"0","df_newl <- data.frame(value = as.vector(zlVentas),"
+"0","                     time = time(zlVentas))"
+"0","ggplot(df_newl)+geom_point(aes(x=time,y=value))+geom_line(aes(x=time,y=value))+ylab(""Ventas"")+ggtitle(""Ventas Trimestrales LOG CocaCola"")+xlab(""Trimestres"")"

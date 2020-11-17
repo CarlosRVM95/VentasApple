@@ -1,0 +1,40 @@
+"0","library(fpp)"
+"0","library(knitr)"
+"0","library(vars)"
+"0","library(forecastHybrid)"
+"0","library(rmarkdown)"
+"0","library(xts)"
+"0","require(forecast)"
+"0","require(xts)"
+"0","require(ggplot2)"
+"0","library(TSstudio)"
+"0","library(readr)"
+"0","library(dplyr)"
+"0","require(forecast)"
+"0","require(xts)"
+"0","require(ggplot2)"
+"0","library(ggfortify)"
+"2","package ‘ggfortify’ was built under R version 4.0.3"
+"2","Registered S3 methods overwritten by 'ggfortify':
+  method                 from    
+  autoplot.Arima         forecast
+  autoplot.acf           forecast
+  autoplot.ar            forecast
+  autoplot.bats          forecast
+  autoplot.decomposed.ts forecast
+  autoplot.ets           forecast
+  autoplot.forecast      forecast
+  autoplot.stl           forecast
+  autoplot.ts            forecast
+  fitted.ar              forecast
+  fortify.ts             forecast
+  residuals.ar           forecast
+"
+"0","IngresosApple <- read_delim(""IngresosApple.csv"", "
+"0","                                   "";"", escape_double = FALSE, trim_ws = TRUE)"
+"2","Parsed with column specification:
+cols(
+  Trimestre = [31mcol_character()[39m,
+  Ingresos = [32mcol_double()[39m
+)
+"

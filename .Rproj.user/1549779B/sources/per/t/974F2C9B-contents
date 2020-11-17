@@ -1,0 +1,117 @@
+---
+title: "Ventas Apple"
+author: "Carlos Rodríguez-Viña Martínez"
+date: "16/11/2020"
+output: html_document
+---
+```{r, echo=FALSE, error=FALSE, warning=FALSE, message=FALSE}
+require(forecast)
+require(xts)
+require(ggplot2)
+library(fpp2)
+library(dplyr)
+library(reshape)
+library(tidyverse)
+library(tseries)
+
+library(readr)
+IngresosApple <- read_delim("IngresosApple.csv", 
+";", escape_double = FALSE, trim_ws = TRUE)
+```
+## Transformación de los datos
+```{r}
+fechas <- seq(as.Date("2008-04-01"), as.Date("2017-09-30"), by = "quarter")
+apple <- mutate(IngresosApple, fecha = fechas)
+str(apple)
+```
+Lo pasamos a formato xts
+```{r}
+Sales = xts(apple$Ingresos, order.by = as.Date(apple$fecha, "%Y/%m/%d"), frequency = 4)
+Sales = to.quarterly(Sales) #Generamso los datos en forma de trimestre
+```
+Lo pasamos a formato zoo.
+```{r}
+zVentas=as.zoo(Sales$Sales.Close)
+zVentas
+```
+
+# Visualización de los Datos
+```{r}
+autoplot(zVentas)+ylab("Ventas")+ggtitle("Ventas Trimestrales Apple")+xlab("Trimestres")
+```
+Observamos que tiene una tendencia positiva y parece que las ventas de un trimestre pueden estar explicadas por las ventas de otros trimestres. Aunque todavía es pronto para confirmarlo.
+
+### Autocorrelacion
+```{r}
+zlVentas=log(zVentas)
+df_newl <- data.frame(value = as.vector(zlVentas),
+                     time = time(zlVentas))
+ggplot(df_newl)+geom_point(aes(x=time,y=value))+geom_line(aes(x=time,y=value))+ylab("Ventas")+ggtitle("Ventas Trimestrales LOG CocaCola")+xlab("Trimestres")
+```
+La instalación de un modelo ARIMA requiere que la serie sea estacionaria . Se dice que una serie es estacionaria cuando su media, varianza y autocovarianza son invariantes en el tiempo.
+
+```{r}
+df_new <- data.frame(value = as.vector(zVentas),
+                     time = time(zVentas))
+ggplot(df_new)+geom_point(aes(x=time,y=value))+geom_line(aes(x=time,y=value))+ylab("Ventas")+ggtitle("Ventas Trimestrales Apple")+xlab("Trimestres")
+```
+
+
+Esta suposición tiene un sentido intuitivo: dado que ARIMA usa retardos previos de series para modelar su comportamiento
+
+```{r}
+ggtsdisplay(zlVentas)
+```
+Observando la primera gráfica podemos observar la autocorrelación que existe entre los datos, por la gráfica podemos observar que las observaciones estan correlacionadas indirectas hasta la octava observación anterior.
+La segunda gráfica me indica que existe una correlación entre la observación t y t-1 es decir la autocorrelación solo es con el trimestre anterior, lo extraño es que parece que tiene una correlaciín con t-5, investigando esto hemos descubierto que coincide con los  lanzamiento de nuevos productos Apple.
+
+
+Para realizar un modelo ARIMA, la serie temporal debe ser estacionaria. Para conseguir esta estacionariedad, la diferenciaremos.
+
+```{r}
+count_d1 =ggtsdisplay(diff(zlVentas))
+count_d1
+```
+Podemos observar que efectivamente es estacional, por lo que podemos proceder a realizar el modelo ARIMA.
+
+
+## ARIMA
+
+Creamos un data para realizar el forecast, en este caso eliminamos 6 trimestres de los datos.
+
+```{r}
+#Select number of observation to compare forecast
+cOmit=6
+
+#Data Size
+nObs=length(zVentas)
+
+#sub_sample
+oVentas <- window(zVentas,start=index(zVentas[1]),end=index(zVentas[nObs-cOmit]))
+
+#out sample (real data to forecast performance)
+pVentas <- window(zVentas,start=index(zVentas[nObs-cOmit+1]),end=index(zVentas[nObs]))
+```
+
+```{r}
+fit1=auto.arima(oVentas,lambda=0)
+summary(fit1)
+```
+```{r}
+tsdisplay(residuals(fit1), lag.max=10, main='(3,1,1) Model Residuals')
+```
+Los resiudos de este modelo son ruido blanco, que es lo que siempre se quiere conseguir.
+
+### Predicción
+Podemos especificar el horizonte de pronóstico h periodos por delante para que se realicen las predicciones, y usar el modelo ajustado para generar dichas predicciones
+```{r}
+fventas.arima=forecast(fit1)
+ggplot(df_new)+geom_point(aes(x=time,y=value))+geom_line(aes(x=time,y=value))+ geom_forecast(fventas.arima,alpha=0.4)+ggtitle("ARIMA: Predicción Apple")
+```
+Observamos que los primeros trimestres la predicción se encuentra en rangos parecidos, pero ha medida que van pasando los trimestres existe una gran dispersión.
+```{r}
+fventas.arima
+```
+Hay dos bandas de azules, una que representa un intervalo de confianza del 80 y otro del 95%, los números que observamos en la tabla se trata de el punto de mi predicción y el valor máximo y mínimo de los intervalos de confianza.
+
+
